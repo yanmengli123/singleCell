@@ -1,0 +1,19 @@
+# Cluster annotation for PBMC3k RNA pipeline
+# Updated after QC fix (n_genes_by_counts corrected)
+# Clusters: 6 (resolution 0.5)
+
+cluster_annotation:
+  # Based on marker gene analysis:
+  # Cluster 0: CD3D, RPS genes - CD4 T cells (naive/memory)
+  # Cluster 1: CD74, CD79A, MS4A1 - B cells
+  # Cluster 2: LYZ, S100A8, S100A9 - Monocytes (classical)
+  # Cluster 3: NKG7, GZMA, PRF1 - NK cells
+  # Cluster 4: FCER1G, FCGR3A, LST1 - Non-classical monocytes / MonoDC
+  # Cluster 5: FCER1A, HLA-DR - Dendritic cells
+
+  "0": "CD4 T cells"
+  "1": "B cells"
+  "2": "Monocytes"
+  "3": "NK cells"
+  "4": "Non-classical Monocytes"
+  "5": "Dendritic cells"

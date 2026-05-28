@@ -2,13 +2,20 @@
 # -*- coding: utf-8 -*-
 """
 Step 4: Marker Gene Detection and Cell Type Annotation
+
+Fixed:
+- Uses correct paths for RNA subdirectory
+- Reads cluster annotation from config file
+- Reports unannotated clusters as error
+- Fixes marker dotplot to use available_markers
 """
 import scanpy as sc
 import pandas as pd
 import matplotlib.pyplot as plt
+import yaml
 from pathlib import Path
 
-# PBMC marker genes
+# PBMC marker genes for dotplot
 MARKER_GENES = {
     'CD8 T cells': ['CD8A', 'CD8B'],
     'CD4 T cells': ['CD3D', 'CD3E', 'IL7R'],
@@ -20,10 +27,11 @@ MARKER_GENES = {
 }
 
 def main():
-    input_file = Path("data/processed/pbmc3k_processed.h5ad")
-    output_file = Path("data/processed/pbmc3k_annotated.h5ad")
-    marker_file = Path("results/tables/marker_genes.csv")
-    annot_file = Path("results/tables/cluster_annotation.csv")
+    input_file = Path("data/processed/rna/pbmc3k_processed.h5ad")
+    output_file = Path("data/processed/rna/pbmc3k_annotated.h5ad")
+    marker_file = Path("results/tables/rna/marker_genes.csv")
+    annot_file = Path("results/tables/rna/cluster_annotation.csv")
+    annot_config = Path("configs/pbmc3k_cluster_annotation.yaml")
 
     print("=" * 50)
     print("STEP 4: MARKER GENES & ANNOTATION")
@@ -43,74 +51,74 @@ def main():
     marker_df.to_csv(marker_file, index=False)
     print(f"   Saved to: {marker_file}")
 
-    # === Plot marker genes ===
-    print("\n[3] Plotting top marker genes...")
-    fig, ax = plt.subplots(1, 1, figsize=(6, 5))
-    sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, ax=ax, show=False)
-    fig.savefig("results/figures/marker_dotplot.png", dpi=100, bbox_inches='tight')
+    # === Plot marker genes (dotplot per cluster) ===
+    print("\n[3] Plotting top marker genes per cluster...")
+    Path("results/figures/rna").mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(1, 1, figsize=(8, 5))
+    sc.pl.rank_genes_groups_dotplot(adata, n_genes=5, ax=ax, show=False, return_fig=True)
+    fig.savefig("results/figures/rna/marker_dotplot.png", dpi=100, bbox_inches='tight')
     plt.close()
-    print("   Saved: results/figures/marker_dotplot.png")
+    print("   Saved: results/figures/rna/marker_dotplot.png")
 
-    # === Manual cell type annotation based on markers ===
-    print("\n[4] Annotating cell types based on marker genes...")
-
-    # Get top marker for each cluster
-    cluster_markers = {}
+    # === Print top markers for reference ===
+    print("\n[4] Top markers per cluster:")
     for cluster in sorted(adata.obs['leiden'].unique(), key=int):
-        cluster_data = marker_df[marker_df['group'] == cluster].head(10)
-        cluster_markers[cluster] = cluster_data['names'].tolist()[:5]
+        cluster_data = marker_df[marker_df['group'] == cluster].head(5)
+        markers = ', '.join(cluster_data['names'].tolist()[:5])
+        print(f"   Cluster {cluster}: {markers}")
 
-    # Print top markers for reference
-    for cluster, markers in cluster_markers.items():
-        print(f"   Cluster {cluster}: {', '.join(markers)}")
+    # === Load cluster annotation from config ===
+    print("\n[5] Loading cluster annotation from config...")
+    with open(annot_config, 'r') as f:
+        config = yaml.safe_load(f)
+    cluster_annot = config['cluster_annotation']
 
-    # Annotation based on marker gene analysis:
-    # Cluster 0: ribosomal/housekeeping genes (LDHB, RPS genes) - likely B cells
-    # Cluster 1: NKG7, GZMA, CST7 - cytotoxic NK markers → NK cells
-    # Cluster 2: CD74, HLA-DRA, CD79A - MHCII/B cell markers → B cells
-    # Cluster 3: FTL, FTH1, LYZ, S100A9 - monocyte markers → Monocytes
-    # Cluster 4: PPBP (platelet marker) → Platelets
-    cluster_annotation = {
-        '0': 'B cells',
-        '1': 'NK cells',
-        '2': 'B cells',
-        '3': 'Monocytes',
-        '4': 'Platelets'
-    }
-
-    adata.obs['cell_type'] = adata.obs['leiden'].map(cluster_annotation)
+    # Check all clusters have annotation
+    unannotated = [c for c in adata.obs['leiden'].unique() if cluster_annot.get(c, 'TBD') == 'TBD']
+    if unannotated:
+        print(f"   WARNING: Clusters {unannotated} have no annotation (TBD)")
+        print(f"   Please update {annot_config} before re-running")
+        # Use TBD for unannotated clusters
+        adata.obs['cell_type'] = adata.obs['leiden'].map(
+            lambda x: cluster_annot.get(x, 'TBD')
+        )
+    else:
+        adata.obs['cell_type'] = adata.obs['leiden'].map(cluster_annot)
 
     # === Save annotation table ===
-    print("\n[5] Saving cluster annotation...")
+    print("\n[6] Saving cluster annotation...")
     annot_file.parent.mkdir(parents=True, exist_ok=True)
     annot_df = pd.DataFrame({
-        'cluster': list(cluster_annotation.keys()),
-        'cell_type': list(cluster_annotation.values())
+        'cluster': list(cluster_annot.keys()),
+        'cell_type': list(cluster_annot.values())
     })
     annot_df.to_csv(annot_file, index=False)
     print(f"   Saved to: {annot_file}")
 
     # === Final UMAP colored by cell type ===
-    print("\n[6] Plotting UMAP with cell types...")
+    print("\n[7] Plotting UMAP with cell types...")
     fig, ax = plt.subplots(1, 1, figsize=(6, 5))
     sc.pl.umap(adata, color='cell_type', ax=ax, show=False)
-    fig.savefig("results/figures/umap_celltype.png", dpi=100, bbox_inches='tight')
+    fig.savefig("results/figures/rna/umap_celltype.png", dpi=100, bbox_inches='tight')
     plt.close()
-    print("   Saved: results/figures/umap_celltype.png")
+    print("   Saved: results/figures/rna/umap_celltype.png")
 
     # === Dot plot of marker genes per cell type ===
-    print("\n[7] Plotting marker genes per cell type...")
+    print("\n[8] Plotting marker genes per cell type...")
     marker_genes_list = [g for genes in MARKER_GENES.values() for g in genes]
-    available_markers = [g for g in marker_genes_list if g in adata.var_names]
+    available_markers = {ct: [g for g in genes if g in adata.var_names]
+                         for ct, genes in MARKER_GENES.items()}
+    available_markers = {k: v for k, v in available_markers.items() if v}
     if available_markers:
-        fig, ax = plt.subplots(1, 1, figsize=(6, 4))
-        sc.pl.dotplot(adata, markers, groupby='cell_type', ax=ax, show=False)
-        fig.savefig("results/figures/umap_markers.png", dpi=100, bbox_inches='tight')
+        fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+        sc.pl.dotplot(adata, available_markers, groupby='cell_type', ax=ax, show=False)
+        fig.savefig("results/figures/rna/umap_markers.png", dpi=100, bbox_inches='tight')
         plt.close()
-        print("   Saved: results/figures/umap_markers.png")
+        print("   Saved: results/figures/rna/umap_markers.png")
 
     # === Save annotated data ===
-    print("\n[8] Saving annotated data...")
+    print("\n[9] Saving annotated data...")
+    output_file.parent.mkdir(parents=True, exist_ok=True)
     adata.write_h5ad(output_file)
     print(f"   Saved to: {output_file}")
 

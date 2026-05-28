@@ -5,7 +5,6 @@ Step 0: Check environment
 Verifies Python path, package versions, working directories, and data files.
 """
 import sys
-import os
 from pathlib import Path
 
 def main():
@@ -31,8 +30,12 @@ def main():
     print(f"\nWorking directory: {cwd}")
 
     # Check key directories
-    dirs_to_check = ['data/raw', 'data/processed', 'scripts', 'notebooks',
-                     'results/figures', 'results/tables', 'notes', 'logs', 'configs']
+    dirs_to_check = [
+        'data/raw/rna', 'data/processed/rna',
+        'scripts/rna', 'scripts/common',
+        'results/figures/rna', 'results/tables/rna',
+        'configs', 'docs'
+    ]
     print("\nDirectory structure:")
     for d in dirs_to_check:
         p = Path(d)
@@ -40,7 +43,7 @@ def main():
         print(f"  {d}: {status}")
 
     # Check input data
-    data_file = Path("data/raw/pbmc3k_raw.h5ad")
+    data_file = Path("data/raw/rna/pbmc3k_raw.h5ad")
     print(f"\nInput data: {data_file}")
     if data_file.exists():
         size_kb = data_file.stat().st_size / 1024

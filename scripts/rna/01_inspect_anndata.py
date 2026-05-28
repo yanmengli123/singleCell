@@ -5,11 +5,10 @@ Step 1: Inspect AnnData structure
 Reads the raw h5ad and prints key information.
 """
 import scanpy as sc
-import anndata as ad
 from pathlib import Path
 
 def main():
-    data_file = Path("data/raw/pbmc3k_raw.h5ad")
+    data_file = Path("data/raw/rna/pbmc3k_raw.h5ad")
     if not data_file.exists():
         print(f"ERROR: {data_file} not found!")
         return
@@ -56,7 +55,8 @@ def main():
     print(f"   Keys: {list(adata.uns.keys())}")
 
     # Save checkpoint
-    output = Path("data/processed/pbmc3k_inspected.h5ad")
+    output = Path("data/processed/rna/pbmc3k_inspected.h5ad")
+    output.parent.mkdir(parents=True, exist_ok=True)
     adata.write_h5ad(output)
     print(f"\nSaved to: {output}")
 

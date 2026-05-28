@@ -3,45 +3,45 @@
 """
 Step 2: QC Filtering
 Adds QC metrics to obs/var, filters cells and genes, saves processed data.
+
+Fixed: n_genes_by_counts is now correctly calculated as number of genes with >0 counts,
+not the sum of counts.
 """
 import scanpy as sc
-import anndata as ad
 import pandas as pd
-import numpy as np
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from common.qc_utils import calculate_qc_metrics, calculate_pct_mt
 
-# QC thresholds
+# QC thresholds from config
 MIN_GENES_PER_CELL = 200
 MAX_GENES_PER_CELL = 2500
 MAX_PCT_MT = 5
 MIN_CELLS_PER_GENE = 3
 
 def main():
-    input_file = Path("data/raw/pbmc3k_raw.h5ad")
-    output_file = Path("data/processed/pbmc3k_qc.h5ad")
-    qc_summary_file = Path("results/tables/qc_summary.csv")
+    input_file = Path("data/raw/rna/pbmc3k_raw.h5ad")
+    output_file = Path("data/processed/rna/pbmc3k_qc.h5ad")
+    qc_summary_file = Path("results/tables/rna/qc_summary.csv")
 
     print("=" * 50)
     print("STEP 2: QC FILTERING")
     print("=" * 50)
 
     # Load data
+    if not input_file.exists():
+        raise FileNotFoundError(f"Input not found: {input_file}")
     adata = sc.read_h5ad(input_file)
     print(f"\nInput: {adata.n_obs} cells x {adata.n_vars} genes")
 
-    # === Calculate QC metrics ===
+    # === Calculate QC metrics correctly ===
     print("\n[1] Calculating QC metrics...")
+    calculate_qc_metrics(adata)
+    calculate_pct_mt(adata)
 
-    # Cell-level metrics
-    adata.obs['n_genes_by_counts'] = np.asarray(adata.X.sum(axis=1)).flatten()
-    adata.obs['total_counts'] = np.asarray(adata.X.sum(axis=1)).flatten()
-
-    # Mitochondrial genes (MT- prefix)
-    adata.var['mt'] = adata.var.index.str.startswith('MT-')
-    adata.obs['pct_counts_mt'] = (
-        adata[:, adata.var['mt']].X.sum(axis=1).A1 / adata.obs['total_counts'] * 100
-    )
-
+    print(f"   n_genes_by_counts median: {adata.obs['n_genes_by_counts'].median():.0f}")
+    print(f"   total_counts median: {adata.obs['total_counts'].median():.0f}")
     print(f"   Cells with high mitochondrial %: {(adata.obs['pct_counts_mt'] > MAX_PCT_MT).sum()}")
     print(f"   Cells with too few genes: {(adata.obs['n_genes_by_counts'] < MIN_GENES_PER_CELL).sum()}")
     print(f"   Cells with too many genes: {(adata.obs['n_genes_by_counts'] > MAX_GENES_PER_CELL).sum()}")

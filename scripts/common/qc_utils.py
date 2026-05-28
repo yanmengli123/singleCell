@@ -1,15 +1,29 @@
 # -*- coding: utf-8 -*-
 """QC utilities for single-cell analysis."""
 import numpy as np
+import scipy.sparse as sp
 
 
 def calculate_qc_metrics(adata):
-    """Calculate per-cell QC metrics."""
-    # Number of genes per cell
-    adata.obs['n_genes_by_counts'] = np.asarray(adata.X.sum(axis=1)).flatten()
+    """Calculate per-cell QC metrics.
 
-    # Total counts per cell
-    adata.obs['total_counts'] = np.asarray(adata.X.sum(axis=1)).flatten()
+    - n_genes_by_counts: number of genes with >0 counts per cell
+    - total_counts: sum of all counts per cell
+    """
+    X = adata.X
+
+    if sp.issparse(X):
+        # For sparse matrix: sum axis=1 gives total counts
+        # (X > 0).sum(axis=1) counts genes with >0
+        n_genes_by_counts = np.array((X > 0).sum(axis=1)).flatten()
+        total_counts = np.array(X.sum(axis=1)).flatten()
+    else:
+        # For dense array/matrix
+        n_genes_by_counts = np.sum(X > 0, axis=1)
+        total_counts = np.sum(X, axis=1)
+
+    adata.obs['n_genes_by_counts'] = n_genes_by_counts
+    adata.obs['total_counts'] = total_counts
 
     return adata
 
@@ -23,32 +37,11 @@ def calculate_pct_mt(adata):
     if mt_genes.sum() == 0:
         adata.obs['pct_counts_mt'] = 0.0
     else:
-        adata.obs['pct_counts_mt'] = (
-            adata[:, mt_genes].X.sum(axis=1).A1 / adata.obs['total_counts'] * 100
-        )
-    return adata
+        X_mt = adata[:, mt_genes].X
+        if sp.issparse(X_mt):
+            mt_counts = np.array(X_mt.sum(axis=1)).flatten()
+        else:
+            mt_counts = np.sum(X_mt, axis=1)
+        adata.obs['pct_counts_mt'] = mt_counts / adata.obs['total_counts'] * 100
 
-
-def filter_cells(adata, min_genes=200, max_genes=2500, max_pct_mt=5):
-    """Filter cells based on QC criteria."""
-    n_before = adata.n_obs
-
-    adata = adata[
-        (adata.obs['n_genes_by_counts'] >= min_genes) &
-        (adata.obs['n_genes_by_counts'] <= max_genes) &
-        (adata.obs['pct_counts_mt'] <= max_pct_mt)
-    ].copy()
-
-    n_after = adata.n_obs
-    print(f"  Cells filtered: {n_before} -> {n_after} (removed {n_before - n_after})")
-    return adata
-
-
-def filter_genes(adata, min_cells=3):
-    """Filter genes based on cell count."""
-    n_before = adata.n_vars
-    import scanpy as sc
-    sc.pp.filter_genes(adata, min_cells=min_cells)
-    n_after = adata.n_vars
-    print(f"  Genes filtered: {n_before} -> {n_after} (removed {n_before - n_after})")
     return adata
