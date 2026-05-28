@@ -1,5 +1,13 @@
-# H5AD binary files (too large for git)
+# H5AD binary files - large processed files not tracked (regenerate from scripts)
 *.h5ad
+
+# Large processed data files (>100MB)
+data/processed/rna/*.h5ad
+
+# Results (regenerate from scripts)
+results/figures/
+results/tables/
+logs/
 
 # Python
 __pycache__/
@@ -12,11 +20,3 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-
-# Results (regenerate from scripts)
-/results/figures/
-/results/tables/
-/logs/

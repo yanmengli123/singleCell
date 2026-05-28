@@ -1,0 +1,62 @@
+dataset: pbmc3k
+description: "PBMC3k RNA-only standard analysis pipeline"
+random_state: 0
+
+paths:
+  input: "data/raw/rna/pbmc3k_raw.h5ad"
+  output_base: "data/processed/rna"
+  results_base: "results"
+
+qc:
+  min_genes_per_cell: 200
+  min_cells_per_gene: 3
+  max_genes_per_cell: 2500
+  max_pct_mt: 5
+
+preprocess:
+  target_sum: 10000
+  n_top_genes: 2000
+  n_pcs: 30
+  n_neighbors: 10
+  leiden_resolution: 0.5
+
+cell_markers:
+  cd8_t:
+    - CD8A
+    - CD8B
+  cd4_t:
+    - CD3D
+    - CD3E
+    - IL7R
+  b_cells:
+    - MS4A1
+    - CD79A
+  nk_cells:
+    - NKG7
+    - GNLY
+  monocytes:
+    - S100A8
+    - S100A9
+    - FCGR3A
+    - LST1
+  dendritic:
+    - FCER1A
+    - CST3
+  platelets:
+    - PPBP
+
+outputs:
+  qc_h5ad: "data/processed/rna/pbmc3k_qc.h5ad"
+  processed_h5ad: "data/processed/rna/pbmc3k_processed.h5ad"
+  annotated_h5ad: "data/processed/rna/pbmc3k_annotated.h5ad"
+  figures:
+    qc_violin: "results/figures/rna/qc_violin.png"
+    qc_scatter: "results/figures/rna/qc_scatter.png"
+    pca_variance: "results/figures/rna/pca_variance.png"
+    umap_leiden: "results/figures/rna/umap_leiden.png"
+    umap_markers: "results/figures/rna/umap_marker_genes.png"
+    umap_celltype: "results/figures/rna/umap_celltype.png"
+  tables:
+    qc_summary: "results/tables/rna/qc_summary.csv"
+    marker_genes: "results/tables/rna/marker_genes.csv"
+    cluster_annotation: "results/tables/rna/cluster_annotation.csv"

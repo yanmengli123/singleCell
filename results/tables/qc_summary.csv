@@ -1,9 +1,0 @@
-metric,value
-original_cells,2700
-filtered_cells,1705
-original_genes,32738
-filtered_genes,12360
-min_genes_per_cell,200
-max_genes_per_cell,2500
-max_pct_mt,5
-min_cells_per_gene,3

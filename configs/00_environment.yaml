@@ -1,0 +1,34 @@
+dataset: pbmc3k
+description: "PBMC3k RNA-only analysis environment check"
+
+python: "D:/soft/Python310/python.exe"
+
+packages:
+  - name: scanpy
+    version_required: "1.10.0"
+  - name: anndata
+    version_required: "0.10.0"
+  - name: numpy
+    version_required: "1.20.0"
+  - name: pandas
+    version_required: "1.5.0"
+  - name: scipy
+    version_required: "1.9.0"
+  - name: matplotlib
+    version_required: "3.5.0"
+  - name: seaborn
+    version_required: "0.11.0"
+  - name: sklearn
+    version_required: "1.0.0"
+  - name: torch
+    version_required: "2.0.0"
+  - name: scvi_tools
+    version_required: "1.0.0"
+  - name: muon
+    version_required: "0.1.0"
+  - name: scglue
+    version_required: "0.3.0"
+
+output:
+  table: "results/tables/environment_versions.csv"
+  log: "logs/environment_check.log"

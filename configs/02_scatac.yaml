@@ -1,0 +1,29 @@
+dataset: atac
+description: "scATAC basic analysis pipeline"
+random_state: 0
+
+paths:
+  input: "data/raw/atac"
+  output_base: "data/processed/atac"
+  results_base: "results"
+
+atac_qc:
+  min_tss_per_cell: 2
+  min_fragments_per_cell: 1000
+  max_fraction_mito: 0.2
+
+preprocess:
+  n_top_features: 50000
+  n_pcs: 50
+  n_neighbors: 10
+  leiden_resolution: 0.5
+
+outputs:
+  lsi_h5ad: "data/processed/atac/atac_lsi.h5ad"
+  figures:
+    umap_lsi: "results/figures/atac/umap_lsi.png"
+    gene_activity: "results/figures/atac/gene_activity_markers.png"
+    tss_enrichment: "results/figures/atac/tss_enrichment.png"
+  tables:
+    atac_qc_summary: "results/tables/atac/atac_qc_summary.csv"
+    peak_annotation: "results/tables/atac/peak_annotation.csv"

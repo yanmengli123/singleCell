@@ -1,0 +1,49 @@
+benchmark:
+  description: "Multi-omics integration benchmark"
+  random_state: 42
+
+methods:
+  - name: "Scanpy_baseline"
+    type: "rna_only"
+  - name: "WNN"
+    type: "multiome"
+  - name: "MultiVI"
+    type: "vae"
+  - name: "GLUE"
+    type: "graph"
+  - name: "latest_2025"
+    type: "state_of_art"
+
+metrics:
+  - name: "ARI"
+    higher_is_better: true
+  - name: "NMI"
+    higher_is_better: true
+  - name: "silhouette_celltype"
+    higher_is_better: true
+  - name: "silhouette_batch"
+    lower_is_better: true
+  - name: "modality_mixing_score"
+    higher_is_better: true
+  - name: "runtime_seconds"
+    lower_is_better: true
+  - name: "gpu_memory_gb"
+    lower_is_better: true
+
+datasets:
+  - name: "PBMC_multiome"
+    rna_cells: 10000
+    atac_cells: 10000
+    paired: true
+
+paths:
+  input_base: "data/raw/benchmark"
+  output_base: "data/processed/benchmark"
+  results_base: "results"
+
+outputs:
+  summary_csv: "results/tables/benchmark/benchmark_summary.csv"
+  figures:
+    metric_barplot: "results/figures/benchmark/metric_barplot.png"
+    runtime_comparison: "results/figures/benchmark/runtime_comparison.png"
+    embedding_scatter: "results/figures/benchmark/embedding_scatter.png"

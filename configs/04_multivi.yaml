@@ -1,0 +1,29 @@
+dataset: multivi
+description: "MultiVI integration analysis pipeline"
+random_state: 0
+
+model:
+  max_epochs: 100
+  lr: 0.001
+  latent_dim: 30
+
+paths:
+  input_rna: "data/raw/multiome/rna.h5ad"
+  input_atac: "data/raw/multiome/atac.h5ad"
+  output_base: "data/processed/multivi"
+  results_base: "results"
+
+multivi:
+  n_epochs: 100
+  batch_size: 256
+  hidden_size: 256
+
+outputs:
+  multivi_h5ad: "data/processed/multivi/multivi_latent.h5ad"
+  figures:
+    latent_umap_modality: "results/figures/multivi/latent_umap_by_modality.png"
+    latent_umap_celltype: "results/figures/multivi/latent_umap_by_celltype.png"
+    reconstruction: "results/figures/multivi/reconstruction_quality.png"
+  tables:
+    modality_mixing: "results/tables/multivi/modality_mixing_metrics.csv"
+    cell_type_transfer: "results/tables/multivi/cell_type_transfer.csv"

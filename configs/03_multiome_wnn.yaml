@@ -1,0 +1,33 @@
+dataset: multiome
+description: "10x Multiome WNN analysis pipeline"
+random_state: 0
+
+paths:
+  input_rna: "data/raw/multiome/rna.h5ad"
+  input_atac: "data/raw/multiome/atac.h5ad"
+  output_base: "data/processed/multiome"
+  results_base: "results"
+
+rna_preprocess:
+  target_sum: 10000
+  n_top_genes: 2000
+  n_pcs: 30
+
+atac_preprocess:
+  n_top_features: 50000
+  n_pcs: 50
+
+wnn:
+  k_weight: 100
+  n_neighbors: 30
+
+outputs:
+  wnn_h5ad: "data/processed/multiome/multiome_wnn.h5ad"
+  figures:
+    rna_only_umap: "results/figures/multiome/rna_only_umap.png"
+    atac_only_umap: "results/figures/multiome/atac_only_umap.png"
+    wnn_umap: "results/figures/multiome/wnn_umap.png"
+    modality_weights: "results/figures/multiome/modality_weights.png"
+  tables:
+    modality_weights: "results/tables/multiome/modality_weights.csv"
+    cell_type_assignments: "results/tables/multiome/cell_type_assignments.csv"

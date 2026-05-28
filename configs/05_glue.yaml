@@ -1,0 +1,45 @@
+dataset: glue
+description: "GLUE multi-omics integration pipeline"
+random_state: 0
+
+model:
+  latent_dim: 50
+  hidden_dim: 256
+  n_epochs: 200
+  lr: 0.001
+
+paths:
+  input_rna: "data/raw/rna"
+  input_atac: "data/raw/atac"
+  guidance_graph: "data/external/guidance"
+  output_base: "data/processed/glue"
+  results_base: "results"
+
+glue:
+  n_epochs: 200
+  batch_size: 128
+  patience: 20
+  edge_threshold: 0.1
+  peak_gene_distance: 50000
+
+guidance_graph:
+  use_hvg: true
+  use_hvp: true
+  edge_type: "correlation"
+  correlation_threshold: 0.3
+
+outputs:
+  rna_prepared: "data/processed/glue/rna_prepared.h5ad"
+  atac_prepared: "data/processed/glue/atac_prepared.h5ad"
+  guidance_graph_file: "data/processed/glue/guidance_graph.graphml"
+  joint_embedding: "data/processed/glue/glue_joint_embedding.h5ad"
+  figures:
+    joint_umap_modality: "results/figures/glue/joint_umap_modality.png"
+    joint_umap_celltype: "results/figures/glue/joint_umap_celltype.png"
+    guidance_graph_viz: "results/figures/glue/guidance_graph.png"
+    cell_type_transfer: "results/figures/glue/cell_type_transfer_confusion.png"
+  tables:
+    cell_type_transfer: "results/tables/glue/cell_type_transfer_metrics.csv"
+    peak_gene_links: "results/tables/glue/peak_gene_links.csv"
+    tf_motif_enrichment: "results/tables/glue/tf_motif_enrichment.csv"
+    ablation_results: "results/tables/glue/ablation_results.csv"
