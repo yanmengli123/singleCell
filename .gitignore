@@ -1,0 +1,22 @@
+# H5AD binary files (too large for git)
+*.h5ad
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Results (regenerate from scripts)
+/results/figures/
+/results/tables/
+/logs/
