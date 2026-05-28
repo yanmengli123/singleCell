@@ -4,63 +4,64 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Single-cell multiomics analysis project spanning RNA-only, scATAC, 10x Multiome, MultiVI, GLUE, and benchmark workflows. Currently Phase 1: PBMC3k RNA-only pipeline is operational.
+Single-cell multiomics analysis project. **RNA-only pipeline (PBMC3k) is operational.** Other modalities (scATAC, Multiome, MultiVI, GLUE, Benchmark) are placeholder scripts.
 
 ## Python Interpreter
 
-Always use: `D:/soft/Python310/python.exe`
+```
+D:/soft/Python310/python.exe
+```
 
 ## Running the RNA Pipeline
 
 ```bash
-# Check environment
+# Full pipeline (run in order)
 D:/soft/Python310/python.exe scripts/rna/00_check_environment.py
-
-# Run pipeline steps in order
 D:/soft/Python310/python.exe scripts/rna/01_inspect_anndata.py
 D:/soft/Python310/python.exe scripts/rna/02_qc_filter.py
 D:/soft/Python310/python.exe scripts/rna/03_preprocess_cluster.py
 D:/soft/Python310/python.exe scripts/rna/04_marker_annotation.py
 ```
 
+## Running Tests
+
+```bash
+D:/soft/Python310/python.exe tests/test_data_integrity.py
+```
+
+Tests validate: file existence, config paths match scripts, QC correctness (n_genes_by_counts != total_counts), cell_type has no NA, all clusters annotated.
+
 ## Architecture
 
-### Pipeline Stages (8 phases total)
-1. **RNA-only** (`scripts/rna/`) - Operational, uses PBMC3k data
-2. **scATAC** (`scripts/atac/`) - Placeholder scripts, needs ATAC data
-3. **Multiome + WNN** (`scripts/multiome/`) - Placeholder scripts, needs multiome data
-4. **MultiVI** (`scripts/multivi/`) - VAE-based integration, placeholder
-5. **GLUE** (`scripts/glue/`) - Graph-based integration, placeholder
-6. **Benchmark** (`scripts/benchmark/`) - Method comparison, placeholder
+### Pipeline Structure
+- **scripts/rna/**: 5-step RNA pipeline (operational)
+- **scripts/common/**: Shared utilities (qc_utils.py, plotting_utils.py, etc.)
+- **scripts/atac/, multiome/, multivi/, glue/, benchmark/**: Placeholder scripts
+- **configs/**: YAML configs with all parameters (not hardcoded)
+- **tests/**: Data integrity tests
 
 ### Data Flow
-- Raw data: `data/raw/` (read-only, tracked in git)
-- Processed: `data/processed/{modality}/` (regenerate via scripts, >100MB excluded from git)
-- Results: `results/figures/` and `results/tables/` (regenerate from scripts)
-
-### Configuration-Driven Design
-All parameters are in YAML configs under `configs/`. Each pipeline stage has its own config:
-- `01_pbmc3k_rna.yaml` - QC thresholds, HVG params, cell markers, output paths
-- `05_glue.yaml` - Guidance graph, model architecture, training params
-
-Modify configs to experiment; don't hardcode parameters in scripts.
-
-### Common Utilities (`scripts/common/`)
-- `io_utils.py` - File I/O helpers
-- `qc_utils.py` - QC metric calculation and filtering
-- `plotting_utils.py` - Figure saving with auto directory creation
-- `logging_utils.py` - Pipeline step logging with timestamps
-- `validation_utils.py` - AnnData shape and field validation
+- `data/raw/rna/pbmc3k_raw.h5ad` (read-only)
+- `data/processed/rna/` intermediate files (>100MB git-ignored)
+- `results/figures/rna/` and `results/tables/rna/` (git-ignored)
 
 ### Key Design Patterns
-1. **Validation on load** - Scripts validate h5ad files exist and have required fields before processing
-2. **Intermediate saves** - Each step saves its output for checkpointing
-3. **Layer preservation** - Raw counts stored in `adata.layers['counts']` before normalization
-4. **Random state** - All stochastic operations use `random_state=0` for reproducibility
+
+**QC Metrics** (`scripts/common/qc_utils.py`):
+- `n_genes_by_counts` = number of genes with >0 counts per cell (NOT sum of counts)
+- `total_counts` = sum of all counts per cell
+- `pct_counts_mt` = mitochondrial percentage
+
+**Layers**: Raw counts preserved in `adata.layers['counts']` before normalization.
+
+**Cluster Annotation**: Read from `configs/pbmc3k_cluster_annotation.yaml`, not hardcoded in scripts.
+
+**Random State**: All stochastic operations use `random_state=0` for reproducibility.
 
 ## Important Notes
 
-- Large h5ad files (>100MB) in `data/processed/` are git-ignored - regenerate with scripts
-- Figures and tables are git-ignored - regenerate from scripts
-- The original PBMC3k data is cached by scanpy at `~/.cache/scanpy/`
-- Console output uses UTF-8; avoid emoji characters that cause GBK encoding errors on Windows
+- `data/processed/*.h5ad` >100MB are git-ignored; regenerate from scripts
+- Figures/tables in `results/` are git-ignored; regenerate from scripts
+- Original data `data/raw/rna/pbmc3k_raw.h5ad` is tracked in git
+- Console output: use UTF-8 compatible strings (avoid emoji/special chars)
+- Paths: read from configs, do not hardcode in scripts
